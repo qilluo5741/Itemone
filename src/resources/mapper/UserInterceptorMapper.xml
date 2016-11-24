@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.WebUserInterceptorMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<select id="valMenuPermissions" parameterType="hashmap" resultType="int">
+		select count(1) from  menuroleinfo mr, menuinfo m  where mr.menuId=m.menuId 
+		and mr.roleId=(select roleId from userinfo where userid=#{userId}) 
+		and m.href=#{href}
+	</select>
+	<!-- 查询当前路径数据库中是否存在 -->
+	<select id="valHrefIsExist" resultType="int" parameterType="string">
+		select count(1) from menuinfo where href=#{href}
+	</select>
+</mapper>

@@ -1,0 +1,9 @@
+版权说明：本项目仅属于享泊科技所有
+声明：本框架如需改动或有疑问请联系作者，根据app需求作者已经完善工具类，需要添加其他工具类。请联系niewei 可发至邮箱niewei_0024@shaorebo.cn
+开发目的：app提供后台数据交互;业务逻辑实现;项目后台数据管理;app后台web页面管理
+
+开发技术：
+	后台:SpringMVC+myBatis+mysql
+	前台：html5+css3
+
+结构说明：http://localhost:8080/sharebo/

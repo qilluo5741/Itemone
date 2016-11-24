@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.VehicleMapper">
+	<!-- 根据userid添加车牌 -->
+	<insert id="insertVehicle" parameterType="com.sharebo.entity.Vehicle">
+		insert into Vehicle values(UUID_SHORT(),#{vehicleno},#{user.userid})
+	</insert>
+	<select id="count" resultType="int">
+		select count(1) from certification where vehicleid=#{vehicleid}
+	</select>
+	<!-- 根据vehicleid删除数据,删除验证车牌号是否是认证车牌号，是就不能删除 -->
+	<delete id="delectVehicle" parameterType="com.sharebo.entity.Vehicle">
+		delete from Vehicle where vehicleid=#{vehicleid}
+	</delete>
+	<!-- 分页集合查询 -->
+	<select id="pagerVehiclebyList" parameterType="hashmap" resultType="com.sharebo.entity.Vehicle">
+		select * from Vehicle where userid=#{userid} limit #{pageBegin},#{pageSize}
+	</select>
+	<!-- 分页集合总条数查询 -->
+	<select id="pagerVehiclebyCount" resultType="int">
+		select count(1) from Vehicle where userid=#{userid}
+	</select>
+	<!-- 查询车牌号-->
+	<select id="getvehicleno" resultType="com.sharebo.entity.Dto.VehicleDto" parameterType="String">
+		select vehicleno,vehicleid from vehicle where userid=#{userid}
+	</select>
+	<!-- 插入车主认证信息 -->
+	<insert id="insertCerti" parameterType="com.sharebo.entity.Certification">
+		insert into Certification values(UUID_SHORT(),#{user.userid},#{vehicle.vehicleid},
+		#{driver_license_positive},#{driver_license_reverse},#{vehicle_license_positive},
+		#{vehicle_license_reverse},#{email},#{certification_status},#{thistime},#{audittime})
+	</insert>
+	<!-- 查询车主是否认证 -->
+	<select id="selectCertific" resultType="int"  parameterType="string" >
+		select count(1) from Certification where userid=#{userid}
+	</select>
+	<update id="getcertification_statusByUserid" parameterType="com.sharebo.entity.Certification">
+		update Certification set certification_status=#{certification_status} where userid=#{user.userid}
+	</update>
+</mapper>

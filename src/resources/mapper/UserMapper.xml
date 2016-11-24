@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.UserMapper">
+	<!-- 修改用户的regid -->
+	<update id="updateRegIdByuserid" parameterType="com.sharebo.entity.UserInfo">
+		update user set regid=#{regid} where userid=#{userid}
+	</update>
+	<!-- 修改用户的token regid -->
+	<update id="updateUserTokenAndRegIdByUserId" parameterType="com.sharebo.entity.UserInfo">
+		update user set token=#{token},regid=#{regid} where userid=#{userid}	
+	</update>
+	<!--查询regid是否为空  -->
+	<select id="getRegIdByUserid" parameterType="string" resultType="string">
+		select regid from user where userid=#{_userid}
+	</select>
+	<!-- 用户登录 -->
+	<select id="userLogin" parameterType="com.sharebo.entity.UserInfo" resultType="string">
+		select userid from user where mobile=#{mobile} and password =#{password} 
+			<if test="is_guard==1">
+				and is_guard=#{is_guard}
+			</if>
+	</select>
+	<!-- 添加一个钱包用户 -->
+	<insert id="addPurse" parameterType="com.sharebo.entity.Purse">
+		insert into purse values(UUID_SHORT(),0.00,0.00,(select userid from user where mobile=#{user.mobile}))
+	</insert>
+	<!-- 验证用户id是否存在钱包 -->
+	<select id="validationPurse" parameterType="string" resultType="int">
+		select count(1) from Purse where userid=(select userid from user where mobile=#{_mobile})
+	</select>
+	<!-- 修改密码 -->
+	<update id="updatePassword" parameterType="com.sharebo.entity.UserInfo">
+		update user set password=#{password},smscode='' where mobile=#{mobile}
+	</update>
+	<!-- 修改代理注册信息 -->
+	<update id="regUserByAgent" parameterType="com.sharebo.entity.UserInfo">
+		update user set password=#{password},date_created=now(),is_guard=1,userName=#{userName},
+		smscode='',bank_open_name=#{bank_open_name},bank_open_no=#{bank_open_no},
+		communityName=#{communityName},Community_address=#{community_address} 
+			where mobile=#{mobile}
+	</update>
+	<!-- 注册用户：修改密码，用户状态，注册时间 -->
+	<update id="regUser" parameterType="com.sharebo.entity.UserInfo">
+		update user set password=#{password},date_created=now(),is_guard=0,smscode='' where mobile=#{mobile}
+	</update>
+	<!-- 通过手机号，验证码查询是是否存在 -->
+	<select id="validationCode" parameterType="com.sharebo.entity.UserInfo" resultType="int">
+		select count(1) from user where mobile=#{mobile} and smscode=#{smscode}
+	</select>
+	<!-- 判断手机号是否存在 存在返回 -->
+	<select id="isExistsByMobile" parameterType="string" resultType="com.sharebo.entity.UserInfo">
+		select * from user where mobile=#{_mobile}
+	</select>
+	<!-- 判断手机号是否是代理用户 -->
+	<select id="isGuardByMobile" parameterType="string" resultType="string">
+		select is_guard from user where mobile=#{_mobile}
+	</select>
+	<!-- 根据用户查询密码是否为空 -->
+	<select id="isPassWordIsNUllByMobile" parameterType="string" resultType="int">
+		select count(1) from user where mobile=#{_mobile} and password is null
+	</select>
+	<select id="selectsmscode" parameterType="com.sharebo.entity.UserInfo" resultType="int">
+		select count(1) from user where smscode=#{smscode} and userid=#{userid}
+	</select>
+	<!-- 添加一个用户 -->
+	<insert id="addUser" parameterType="com.sharebo.entity.UserInfo">
+		insert into user(UUID_SHORT(),mobile,is_guard,date_updated,smscode) values(#{userid},#{mobile},#{is_guard},now(),${smscode})
+	</insert>
+	<!-- 根据手机修改验证码 -->
+	<update id="updateCodeByMobile" parameterType="com.sharebo.entity.UserInfo">
+		update user set smscode=#{smscode},date_updated=now() where mobile=#{mobile}
+	</update>
+	<!--根据userid修改用户姓名-->
+	<update id="updateUserNameByUserid" parameterType="com.sharebo.entity.UserInfo">
+	    update user set userName=#{userName} where userid=#{userid}
+	</update>
+	<!--根据userid修改用户年龄-->
+	<update id="updateAgeByUsuerid" parameterType="com.sharebo.entity.UserInfo">
+	    update user set age=#{age} where userid=#{userid}
+	</update>
+	<!--根据userid修改用户性别-->
+	<update id="updateSexByUserid" parameterType="com.sharebo.entity.UserInfo">
+	    update user set sex=#{sex} where userid=#{userid}
+	</update>
+	<!--根据userid修改支付宝姓名-->
+	<update id="updatePaynameByUserid" parameterType="com.sharebo.entity.UserInfo">
+	    update user set payname=#{payname} where userid=#{userid}
+	</update>
+	<!--根据userid修改支付宝账号-->
+	<update id="updatePaynoByUserid" parameterType="com.sharebo.entity.UserInfo">
+	    update user set payno=#{payno} where userid=#{userid}
+	</update>
+	<select id="selectMobileByUserid"  parameterType="string" resultType="string">
+	    select mobile from user where userid=#{userid}
+	</select>
+	<update id="updateMobileByUserid"  parameterType="com.sharebo.entity.UserInfo">
+	    update user set mobile=#{mobile} where userid=#{userid}
+	</update>
+	<!--根据userid查询一个对象-->
+	<select id="selectByUserid" resultType="int" parameterType="string">
+		select count(1) from user where userid=#{_userid} and 
+		((entrance is null or entrance ='') || (communityName is null or communityName ='')||(Community_address is null or Community_address =''))
+	</select>
+	<!--代理用户关联小区-->
+	<update id="relateCommunity" parameterType="hashmap">
+		update user set communityName=#{communityName} ,community_address=#{community_address},
+		 entrance=#{entrance},id_card=#{id_card} where userid=#{userid}
+	</update>
+	<!--代理用户解除小区-->
+	<update id="cancleCommunity" parameterType="string">
+	update user set communityName=null ,community_address=null,
+		 entrance=null ,id_card=null where userid=#{_userid}
+	</update>
+	<!-- 查看关联小区的信息 -->
+	<select id="selectByuserid" parameterType="string" resultType="com.sharebo.entity.Dto.userDto">
+	   select * from user where userid=#{userid}
+	</select>
+	<!--根据userid查询用户个人信息-->
+	<select id="selectUserInfoDtoByUserid" parameterType="String" resultType="com.sharebo.entity.Dto.UserInfoDto">
+	  SELECT
+		u.userid,
+		u.headportrait,
+		u.sex,
+		u.userName,
+		u.age,
+		u.mobile,
+		u.payno,
+		(
+			SELECT
+				certification_status
+			FROM
+				certification
+			WHERE
+				userid = #{userid}
+		) AS certification_status,
+		(
+			SELECT
+				count(1)
+			FROM
+				vehicle
+			WHERE
+				userid = #{userid}
+		) AS totalVehicle
+	FROM
+		USER u
+	WHERE
+	u.userid = #{userid}
+	</select>
+	<!-- 修改头像 -->
+	<update id="getImageByUserid" parameterType="com.sharebo.entity.UserInfo">
+		update user set headportrait=#{headportrait} where userid=#{userid}
+	</update>
+	</mapper>

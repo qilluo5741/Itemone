@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.TouchBalanceMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<insert id="addTouchBalance" parameterType="com.sharebo.entity.TouchBalance">
+		insert into touchBalance values(#{tbid},#{money},#{operation_time},#{tradtype},#{purse.purseid})
+	</insert>
+	<!--根据用户id查询purseid -->
+	<select id="getpurseBypurseid" parameterType="string" resultType="string">
+		select purseid from purse where userid=#{userid}
+	</select>
+</mapper>

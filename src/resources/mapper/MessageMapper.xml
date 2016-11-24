@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.MessageMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<insert id="AddMessage" parameterType="com.sharebo.entity.Message">
+		insert into Message values(#{msgid},#{msgType},#{msgContent},#{user.userid},#{order.orderid},#{messageTime})
+	</insert>
+	<!-- 分页查询供方消息记录 -->
+	<select id="pagersupplierMessagebyList" parameterType="hashmap" resultType="com.sharebo.entity.Dto.supplierMessageDto">
+		SELECT
+		o.vehicleid,
+		c.community_address,
+		c.community_name,
+		o.order_state,
+		o.typemoney,
+		p.chargetype,
+		m.orderid,
+		m.msgContent,
+		u.userName
+	FROM
+		message m
+	LEFT JOIN orderinfo o ON o.orderid = m.orderid
+	LEFT JOIN USER u ON u.userid = m.userid
+	LEFT JOIN parkingspace p ON o.parkid = p.parkid
+	LEFT JOIN community c ON c.communityid = p.communityid
+	WHERE
+		m.userid = #{userid}
+	ORDER BY
+		m.messageTime DESC
+	LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询供方消息记录总条数 -->
+	<select id="pagersupplierMessagebyCount" resultType="int" parameterType="string">
+		select count(1) from Message where userid=#{userid}
+	</select>
+	<!-- 分页查询需方消息记录-->
+	<select id="pagerbuyerMessagebyList" parameterType="hashmap" resultType="com.sharebo.entity.Dto.buyerMessageDto">
+		SELECT
+		o.typemoney,
+		p.chargetype,
+		c.community_address, 
+		c.community_name,
+		m.orderid,
+		m.msgContent,
+		o.order_state
+		FROM
+			message m
+		LEFT JOIN orderinfo o ON o.orderid = m.orderid
+		LEFT JOIN USER u ON u.userid = m.userid
+		LEFT JOIN parkingspace p ON o.parkid = p.parkid
+		LEFT JOIN community c ON c.communityid = p.communityid
+		WHERE
+			m.userid = #{userid}
+		ORDER BY
+			m.messageTime DESC
+		LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询需方消息记录总条数 -->
+	<select id="pagerbuyerMessagebyCount" resultType="int" parameterType="string">
+		select count(1) from Message where userid=#{userid}
+	</select>
+</mapper>

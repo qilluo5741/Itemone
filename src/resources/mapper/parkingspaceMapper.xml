@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.parkingspaceMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+<!-- 通过小区id分页查询车位 -->
+	<select id="pagertbyList" parameterType="hashmap" resultType="com.sharebo.entity.Dto.ParkingDto">	
+	SELECT p.chargetype,(select 
+	CASE  
+		WHEN 
+		(
+				select count(1) from ordertime ot
+				where ot.orderid in (select orderid from orderinfo where parkid=p.parkid)
+			 and thisDate=date_format(now(),'%Y-%m-%d') 
+			 and date_format(now(),'%H:%i:%s') &lt; end_time
+			 and date_format(now(),'%H:%i:%s') &gt; begin_time
+		)>0 
+		THEN 1 ELSE 0 end   from dual) as parkstate,u.userName,u.mobile,p.parkid,p.money from parkingspace p,user u
+ 			where communityId=#{communityId}  and is_delete = 0 and u.userid=p.userid ORDER BY update_time desc 
+	 LIMIT  #{pageBegin},#{pageSize}
+	</select>
+	<!-- 总数 -->
+	<select id="pagerbyCount" resultType="int">
+	select count(0) from Parkingspace where is_delete = 0
+	</select>
+	<!-- 通过车位id查询车位详情（车位状态、收费类型、费用、说明、类型、入口地址、是否收藏） -->
+	<select id="selectById" parameterType="string" resultType="com.sharebo.entity.Dto.ParkingdetailDto">
+		select * from Parkingspace p,community c where p.parkid = #{_parkid} and c.communityId=p.communityId and p.is_delete = 0
+	</select>
+	<!-- 判断车位是否被收藏 -->
+	<select id="iscollect" parameterType="hashmap" resultType="int">
+		select count(0) from collect where userid = #{userid} and parkid =#{parkid}
+	</select>
+	
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CommunityMapper">
+	<resultMap type="com.sharebo.entity.Community" id="CommunMap">
+		<id property="communityId" column="communityId"/>
+		<result property="community_name" column="community_name"/>
+		<result property="community_address" column="community_address"/>
+		<result property="administrative" column="administrative"/>
+		<result property="addtime" column="addtime"/>
+		<result property="isaudit" column="isaudit"/>
+		<result property="gaodeId" column="gaodeId"/>
+	</resultMap>
+	<!-- 车位,不存在就添加 -->
+	<insert id="addCommunity" parameterType="com.sharebo.entity.Community">
+		insert into community values(#{communityId},#{community_name},#{community_address},#{administrative},#{addtime},#{isaudit},#{gaodeId})
+	</insert>
+	<!-- 查询小区为通过审核的 -->
+	<select id="getCommunityByPager" parameterType="hashmap" resultMap="CommunMap">
+		SELECT * FROM community c WHERE isaudit = 0 ORDER BY c.addtime desc LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询小区总数 -->
+	<select id="getCommunity" resultType="int">
+		select count(1) from community WHERE isaudit = 0 
+	</select>
+	<update id="updateCommunity" parameterType="com.sharebo.entity.Community">
+		update Community set isaudit=#{isaudit} where communityId=#{communityId}
+	</update>
+	<!-- 查询小区总数 -->
+	<select id="getCommunityvaguecount" resultType="int" parameterType="string">
+	select count(1) from Community where community_name like concat(concat('%',#{communityname}),'%') or community_address like concat(concat('%',#{communityname}),'%')
+	</select>
+	<!-- 查询小区-->
+	<select id="getCommunityByvaguePager" parameterType="hashmap" resultMap="CommunMap">
+		select * from community where community_name like '%${communityname}%' or community_address like '%${communityname}%' LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<select id="getCommunityvaguecounts" resultType="int" parameterType="string">
+		select count(1) from Community
+	</select>
+	<!-- 查询小区-->
+	<select id="getCommunityByvaguePagers" parameterType="hashmap" resultMap="CommunMap">
+		select * from community LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 验证x小区地址是否已经存在 -->
+	<select id="valCommunityExists" parameterType="string" resultType="int">
+		select count(1) from  Community where community_address=#{community_address}
+	</select>
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.WebFeedbackMapper">
+	<!-- 查询全部分页 -->
+	<select id="getFeedbackPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.FeedbackDto">
+		SELECT
+		f.feedback_content,
+		f.feedback_img,
+		f.feedback_time,
+		u.userName,
+		u.mobile,
+		u.age,
+		u.sex
+	FROM
+		feedback f,
+		USER u
+	WHERE
+		u.userid = f.userid
+		ORDER BY f.feedback_time
+	desc LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询全部总数 -->
+	<select id="getFeedbackcount" resultType="int" parameterType="string">
+		select count(1) FROM
+		feedback f,
+		USER u
+	WHERE
+		u.userid = f.userid
+	</select>
+</mapper>

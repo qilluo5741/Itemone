@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.WebUserMapper">
+	<!-- 添加用户 -->
+	<insert id="regist" parameterType="com.sharebo.entity.WebUserInfo">
+		insert into UserInfo values(UUID_SHORT(),#{userName},#{userAccount},#{userPwd},0,default,#{userRemark},'24534087746197219');
+	</insert>
+	<!-- 验证用户名是否存在 -->
+	<select id="valUserAccountIsExixts" parameterType="string" resultType="int">
+		select count(0) from UserInfo where userAccount=#{_userAccount}
+	</select>
+	<!-- 登录 -->
+	<select id="login" parameterType="com.sharebo.entity.WebUserInfo" resultType="com.sharebo.entity.WebUserInfo">
+		select * from UserInfo where  userAccount=#{userName} and userPwd=#{userPwd}
+	</select>
+	
+	<!-- 映射菜单结果 -->
+	<resultMap type="com.sharebo.entity.MenuType" id="MenusTypeResMap">
+			<id  column="menuTypeId" property="menuTypeId"/>
+			<result column="menuTypeName" property="menuTypeName"/>
+			<result column="menuTypeicon" property="menuTypeicon"/>
+			<result column="remark" property="remark"/>
+			<collection property="menus" ofType="com.sharebo.entity.MenuInfo">
+				<id column="menuId" property="menuId"/>
+				<result column="menuName" property="menuName"/>
+				<result column="href" property="href"/>
+				<result column="target" property="target"/>
+			</collection>
+	</resultMap>
+	<!-- 根据用户的Id去查询 该用户能访问的一级菜单 -->
+	<select id="getMenus" parameterType="string" resultMap="MenusTypeResMap">
+	select 
+		*
+	 from  MenuInfo m 
+	 	left join menutype mt 
+	 		on
+ 		 m.menutypeid=mt.menutypeid 
+	WHERE 
+		m.menuId in(
+	select
+		menuid from MenuRoleInfo 
+					mr inner join roleinfo r 
+					on mr.roleid=r.roleid inner join userinfo u 
+					on u.roleid=r.roleid 
+			where u.userid=#{userId}
+	)
+	</select> 
+	<!-- 查询注册量数据 --> 
+	<select id="userRegistCount" parameterType="hashmap" resultType="com.sharebo.entity.Dto.UserRegistCountDto">
+		select DATE_FORMAT(date_created,"%Y-%m-%d") dateupdate,count(1) count from 
+		user where date_created  &gt; #{begin} and date_created  &lt; #{end} 
+		group by DATE_FORMAT(date_created,"%Y-%m-%d")
+	</select>
+	<!-- 模糊查询未注册成功用户分页 -->
+	<select id="getUserInfoByisnotPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.appUserDto">
+		select * from user where date_created between #{date_creabeegin} and #{date_creaend} and mobile like '%${mobile}%' LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<select id="getUserInfonotcount" resultType="int" parameterType="string">
+		select count(1) from user where  date_created between #{date_creabeegin} and #{date_creaend} and mobile like concat(concat('%',#{mobile}),'%')
+	</select>
+	<!-- 查询全部用户分页 -->
+	<select id="getUserInfoByisPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.appUserDto">
+		select * from user LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询全部用户总数 -->
+	<select id="getUserInfocount" resultType="int" parameterType="string">
+		select count(1) from user
+	</select>
+</mapper>

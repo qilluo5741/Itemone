@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.TestMapper">
+
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+
+	<insert id="insertTestInfo" parameterType="com.sharebo.entity.TestInfo">
+		insert into testtabel values(#{tid},#{tname})
+	</insert>
+	<update id="updateTestInfo" parameterType="com.sharebo.entity.TestInfo">
+		update testtabel set tname=#{tname} where tid = #{tid}
+	</update>
+	<select id="getTestInfo"  resultType="com.sharebo.entity.TestInfo">
+		select * from testtabel
+	</select>
+	<!-- 分页集合查询 -->
+	<select id="pagerTestbyList" parameterType="hashmap" resultType="com.sharebo.entity.TestInfo">
+		select * from testtabel LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 分页集合总条数查询 -->
+	<select id="pagerTestbyCount" resultType="int">
+		select count(1) from testtabel
+	</select>
+	
+	
+	<select id="timeTest" resultType="com.sharebo.entity.Weekrules">
+		select * from weekrules
+	</select>
+	<!-- 添加一个禁用日期 -->
+	<insert id="addDayrules" parameterType="hashmap">
+		insert into dayrules(id,thisDay) values(#{id},'${thisDay}')
+	</insert>
+	<update id="updateDisable" parameterType="string">
+		update  dayrules set hours_01=0 ,  hours_02=0 ,  hours_03=0 ,  hours_04=0 ,  hours_05=0 ,  hours_06=0 ,  hours_07=0 ,  hours_08=0 ,  hours_09=0 ,  hours_10=0 ,  hours_11=0 ,  hours_12=0 ,  hours_13=0 ,  hours_14=0 ,  hours_15=0 ,  hours_16=0 ,  hours_17=0 ,  hours_18=0 ,  hours_19=0,  hours_20=0 ,  hours_21=0 ,  hours_22=0,  hours_23=0 ,  hours_24=0
+			 where thisDay=#{_thisDay}
+	</update>
+	<!-- 判断是否存在 -->
+	<select id="isdayrulesExists" parameterType="string" resultType="int">
+		select count(1) from  dayrules where thisDay=#{_thisDay}
+	</select>
+	<!-- 查询某天是否非禁用  -->
+	<select id="isDayNotDisable" resultType="int" parameterType="string">
+		select count(1) from dayrules where ( hours_01=1 ||  hours_02=1 ||  hours_03=1 ||  hours_04=1 ||  hours_05=1 ||  hours_06=1 ||  hours_07=1 ||  hours_08=1 ||  hours_09=1 ||  hours_10=1 ||  hours_11=1 ||  hours_12=1 ||  hours_13=1 ||  hours_14=1 ||  hours_15=1 ||  hours_16=1 ||  hours_17=1 ||  hours_18=1 ||  hours_19=1 ||  hours_20=1 ||  hours_21=1 ||  hours_22=1 ||  hours_23=1 ||  hours_24=1 )
+ 			and thisDay=#{today}
+	</select>
+	<!--查询某天是否禁用  #0 没有禁用  1 禁用-->
+	<select id="isDayDisable" resultType="int" parameterType="string">
+		 select count(1) from dayrules where ( hours_01 is null or hours_01=0 ) and ( hours_02 is null or hours_02=0 ) and ( hours_03 is null or hours_03=0 ) and ( hours_04 is null or hours_04=0 ) and ( hours_05 is null or hours_05=0 ) and ( hours_06 is null or hours_06=0 ) and ( hours_07 is null or hours_07=0 ) and ( hours_08 is null or hours_08=0 ) and ( hours_09 is null or hours_09=0 ) and ( hours_10 is null or hours_10=0 ) and ( hours_11 is null or hours_11=0 ) and ( hours_12 is null or hours_12=0 ) and ( hours_13 is null or hours_13=0 ) and ( hours_14 is null or hours_14=0 ) and ( hours_15 is null or hours_15=0 ) and ( hours_16 is null or hours_16=0 ) and ( hours_17 is null or hours_17=0 ) and ( hours_18 is null or hours_18=0 ) and ( hours_19 is null or hours_19=0 ) and ( hours_20 is null or hours_20=0 ) and ( hours_21 is null or hours_21=0 ) and ( hours_22 is null or hours_22=0 ) and ( hours_23 is null or hours_23=0 ) and ( hours_24 is null or hours_24=0 ) 
+			and thisDay=#{today}
+	</select>
+	<!-- 根据星期查询用户的星期规则 -->
+	<select id="weekTime" resultType="com.sharebo.entity.Weekrules">
+		select * from weekrules
+	</select>
+	<!-- 通过车位ID  和时间 查询时间 -->
+	<select id="getOrdertime" resultType="com.sharebo.entity.OrderTime" parameterType="hashmap">
+		select * from ordertime where thisDay=#{day}
+	</select>
+	<!-- 查询一个的可用时间 -->
+	 <select id="getDayrules" parameterType="hashmap" resultType="com.sharebo.entity.Dayrules">
+	 	select * from dayrules where thisDay=#{day}
+	 </select>
+	 
+	<!-- 查询星期是否为禁用 -->
+	<select id="isdisableWeek" parameterType="hashmap" resultType="int">
+		select count(1) from  weekrules  
+			<where>
+				<if test="week==1"><!-- 星期日 -->
+					sunday_begin=sunday_end
+				</if>
+				<if test="week==2"><!-- 星期一 -->
+					monday_begin=monday_end
+				</if>
+				<if test="week==3"><!-- 星期二 -->
+					tuesday_begin=tuesday_end
+				</if>
+				<if test="week==4"><!-- 星期三 -->
+					wednesday_begin=wednesday_end
+				</if>
+				<if test="week==5"><!-- 星期四 -->
+					thursday_begin=thursday_end
+				</if>
+				<if test="week==6"><!-- 星期五 -->
+					friday_begin=friday_end
+				</if>
+				<if test="week==7"><!-- 星期六 -->
+					saturday_begin=saturday_end
+				</if>
+			</where>
+	</select>
+</mapper>

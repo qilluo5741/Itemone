@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.InvitedRecordMapper">
+	<!-- 插入邀请记录信息 -->
+	<insert id="insertInvited" parameterType="com.sharebo.entity.InvitedRecord">
+		insert into InvitedRecord values(UUID_SHORT(),#{to_phone},#{inviteTime},#{inviteState},#{user.userid})
+	</insert>
+	<!--  验证手机号码是否存在 -->
+	<select id="InvitedRecordPurse" parameterType="string" resultType="int">
+		select count(1) from user  where mobile=#{mobile}
+	</select>
+	<!--  验证用户是否已经被邀请 -->
+	<select id="InvitedRecord" parameterType="string" resultType="int">
+		select count(1) from invitedrecord where to_phone=#{mobile}
+	</select>
+	<!-- 分页集合查询 -->
+	<select id="pagerInvitedbyList" parameterType="hashmap" resultType="com.sharebo.entity.InvitedRecord">
+		select * from InvitedRecord where userid=#{userid} order by inviteTime asc limit #{pageBegin},#{pageSize}
+	</select>
+	<!-- 分页集合总条数查询 -->
+	<select id="pagerInvitedbyCount" resultType="int">
+		select count(1) from InvitedRecord where userid=#{userid}
+	</select>
+</mapper>

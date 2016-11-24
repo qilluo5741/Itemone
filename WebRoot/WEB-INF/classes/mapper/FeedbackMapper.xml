@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.FeedbackMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<!-- 根插入用户的意见信息 -->
+	<insert id="insertfeedback" parameterType="com.sharebo.entity.Feedback">
+		insert into Feedback values(UUID_SHORT(),#{feedback_content},#{feedback_img},#{feedback_time},#{user.userid})
+	</insert>
+</mapper>

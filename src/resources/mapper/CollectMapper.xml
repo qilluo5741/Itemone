@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CollectMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<!-- 根据标记车位,不存在就添加 -->
+	<insert id="addCollect" parameterType="com.sharebo.entity.Collect">
+		insert into Collect values(#{collectid},#{user.userid},#{park.parkid},#{collecttime})
+	</insert>
+	<!-- 向车位收藏表中查询是否存在 -->
+	<select id="Collectcount" resultType="int" parameterType="com.sharebo.entity.Collect">
+		select count(1) from collect where parkid=#{park.parkid} and userid=#{user.userid}
+	</select>
+	<!--存在就删除-->
+	<delete id="delectCollect" parameterType="com.sharebo.entity.Collect">
+		delete from collect where parkid=#{park.parkid} and userid=#{user.userid}
+	</delete>
+	<!-- 分页集合总条数查询 -->
+	<select id="pagerCountInformation" resultType="int">
+		select count(1) from parkingspace where userid=#{userid}
+	</select>
+	<!-- 标记车位-我的标记查询 -->
+	<select id="getCollect" parameterType="hashmap" resultType="com.sharebo.entity.Dto.InformationDto">
+		SELECT
+			c.parkid,
+			u.userName,
+			u.sex,
+			p.entrance,
+			p.parkstate,
+			p.money,
+			p.chargetype
+		FROM
+			collect c,
+			parkingspace p,
+			USER u
+		WHERE
+			c.parkid = p.parkid
+		AND u.userid = p.userid
+		AND c.userid = #{userid}
+		order by c.collecttime
+		asc limit #{pageBegin},#{pageSize}
+	</select>
+</mapper>

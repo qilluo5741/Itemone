@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.OwnerorderMapper">
+	<!-- 模糊分页 -->
+	<select id="getOwnerorderByPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.OwnerorderDto">
+		SELECT o.ordernum,p.parkno,o.placeorde_time,o.supplierconfirm_time,o.payment_time,
+		o.payType,o.order_state,o.vehicleid,u.userName,u.mobile,o.money,p.chargetype
+		FROM orderinfo o,USER u,parkingspace p WHERE u.userName IN (SELECT u.userName
+		FROM USER u WHERE u.userName like '%${userName}%' OR u.mobile like '%${mobile}%')
+		AND (order_state = 1 OR order_state = 3 OR order_state = 4)
+		AND u.userid = o.from_userid AND u.userid = p.userid and o.from_userid= p.userid LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询总数 -->
+	<select id="getOwnerorder" resultType="int" parameterType="string">
+		SELECT count(1) FROM orderinfo o, USER u, parkingspace p WHERE
+		u.userName IN (SELECT u.userName FROM USER u WHERE u.userName like '%${userName}%'
+		OR u.mobile like '%${mobile}%') AND (order_state = 1 OR order_state = 3 OR order_state = 4)
+		AND u.userid = o.from_userid AND u.userid = p.userid and o.from_userid= p.userid
+	</select>
+	<select id="getOwnerorderByAllPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.OwnerorderDto">
+		SELECT o.ordernum, p.parkno,o.placeorde_time,o.supplierconfirm_time,o.payment_time,o.payType,o.order_state,
+		o.vehicleid,u.userName,u.mobile,o.money,p.chargetype
+		FROM orderinfo o,user u,parkingspace p
+		WHERE u.userid = o.from_userid AND u.userid = p.userid and o.from_userid= p.userid
+		LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询总数 -->
+	<select id="getOwnerorderAll" resultType="int" parameterType="string">
+		SELECT count(1) FROM orderinfo o,user u,parkingspace p WHERE u.userid = o.from_userid AND u.userid = p.userid and o.from_userid= p.userid
+	</select>
+</mapper>

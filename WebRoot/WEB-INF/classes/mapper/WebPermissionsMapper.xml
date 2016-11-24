@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.WebPermissionsMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<!-- 分页查询用户 -->
+	<select id="users" parameterType="hashmap" resultType="com.sharebo.entity.Dto.UserInfoAllDto">
+		select u.*,r.roleName,r.roleId from userinfo u,roleinfo r where u.roleId=r.roleId LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询用户总数 -->
+	<select id="userAllCount" resultType="int">
+		select count(1) from userinfo
+	</select>
+	<!-- 修改用户角色 -->
+	<update id="updateUserInfoRole" parameterType="hashmap">
+		update UserInfo SET roleId=#{roleId} where userId=#{userId}
+	</update>
+	<!-- 修改用户状态 -->
+	<update id="updateUserStatus" parameterType="hashmap">
+		update UserInfo set userStatus=${userStatus} where userid=#{userId}
+	</update>
+	<!-- 删除角色菜单管理数据 -->
+	<delete id="deleteRoleMenus" parameterType="hashmap" >
+		delete from  MenuRoleInfo where menuId=#{menuId} and roleId=#{roleId}
+	</delete>
+	<!-- 根据角色id 和菜单id 验证此角色是否拥有了菜单 -->
+	<select id="valRoleMenuByRoleIdOnMeunId" parameterType="hashmap" resultType="int">
+		select count(1) from MenuRoleInfo where menuId=#{menuId} and roleId=#{roleId}
+	</select>
+	<!--添加角色菜单数据 -->
+	<insert id="addRoleMenus" parameterType="hashmap" >
+		insert into MenuRoleInfo value(UUID_SHORT(),#{menuId},#{roleId})
+	</insert>
+	<!-- 根据角色id查询已经选择的菜单 -->
+	<select id="getMenusByRoleId" parameterType="string" resultType="com.sharebo.entity.Dto.MenusDto">
+		select mt.menuTypeName,m.menuId,m.menuName 
+			from MenuRoleInfo mr ,menuinfo m,menutype mt 
+		where mt.menuTypeId=m.menuTypeId 
+			and  m.menuId=mr.menuId and mr.roleId=#{roleId};
+	</select>
+	<!-- 根据角色id查询未选择的菜单 -->
+	<select id="getNotuMenusByRoleId"  parameterType="string" resultType="com.sharebo.entity.Dto.MenusDto">
+		select * from menuinfo m , menutype mt 
+			where m.menuTypeId=mt.menuTypeId 
+		and  m.menuId not in (select menuid from menuroleinfo where roleId=#{roleId})
+	</select>
+	<!-- 分页查询菜单 -->
+	<resultMap type="com.sharebo.entity.MenuInfo" id="menuMap">
+		<id property="menuId" column="menuId"/>
+		<result property="menuName" column="menuName"/>
+		<result property="href" column="href"/>
+		<result property="target" column="target"/>
+		<association property="mt" javaType="com.sharebo.entity.MenuType">
+			<id property="menuTypeId" column="menuTypeId"/>
+			<result property="menuTypeName" column="menuTypeName"/>
+		</association>
+	</resultMap>
+	<select id="getMenusByPager" parameterType="hashmap" resultMap="menuMap">
+		select * from MenuInfo m left JOIN MenuType mt on mt.menuTypeId=m.menuTypeId LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询菜单总数 -->
+	<select id="getMenusCount" resultType="int">
+		select count(1) from MenuInfo
+	</select>
+	<!-- 查询全部菜单 类型-->
+	<select id="queryAllMenusType" resultType="com.sharebo.entity.MenuType">
+		select * from MenuType
+	</select>
+	<!-- 修改 菜单类型 -->
+	<update id="updateMenusType" parameterType="com.sharebo.entity.MenuType">
+		update MenuType set menuTypeName=#{menuTypeName} where menuTypeId=#{menuTypeId}
+	</update>
+	<!-- 验证是否存在子菜单 -->
+	<select id="valMenusIsExists" resultType="int" parameterType="string">
+		select count(1) from MenuInfo where menuTypeId=#{menuTypeId}
+	</select>
+	<!-- 删除菜单类型 -->
+	<delete id="deletemenuTypeById" parameterType="string">
+		delete from  MenuType where menuTypeId=#{menuTypeId}
+	</delete>
+	<!--验证 -->
+	<select id="valMenuTypeIsExists" parameterType="string" resultType="int">
+		select count(1) from MenuType where menuTypeName=#{menuTypeName}
+	</select>
+	<!-- 添加菜单类型 -->
+	<insert id="addMenuType" parameterType="com.sharebo.entity.MenuType">
+		insert into MenuType values(UUID_SHORT(),#{menuTypeName},'',#{remark})
+	</insert>
+	<!-- 查询全部查询角色-->
+	<select id="pagertbyList" resultType="com.sharebo.entity.RoleInfo">
+		select * from RoleInfo
+	</select>
+	<!-- 添加角色 -->
+	<insert id="addRoleInfo" parameterType="com.sharebo.entity.RoleInfo">
+		insert into RoleInfo values(UUID_SHORT(),#{roleName})
+	</insert>
+	<!-- 修改角色 -->
+	<update id="updateRoleInfo" parameterType="com.sharebo.entity.RoleInfo">
+		update roleinfo set roleName=#{roleName} where roleId=#{roleId}
+	</update>
+	<!-- 删除角色 -->
+	<delete id="deleteRoleInfo" parameterType="string">
+		delete from roleinfo where roleId=#{roleId}
+	</delete>
+	<!-- 验证是否存在子菜单 -->
+	<select id="valRoleInfoExists" resultType="int" parameterType="string">
+		select count(1) from userinfo where roleId=#{role.roleId}
+	</select>
+	<!-- 根据菜单id查询一条菜单信息 -->
+	<select id="getMenuById" parameterType="string" resultType="com.sharebo.entity.MenuInfo">
+		select * from menuinfo where menuId=#{menuId}
+	</select>
+	<!--修改菜单 -->
+	<update id="updateMenuById" parameterType="com.sharebo.entity.MenuInfo">
+		update MenuInfo set menuName=#{menuName} ,href=#{href},menuTypeId=#{mt.menuTypeId} where menuId=#{menuId}
+	</update>
+	<!-- 查询角色菜单表中是否存在菜单id -->
+	<select id="valRoleMenuIsExistsMenuId" parameterType="string" resultType="int">
+		select count(1) from MenuRoleInfo where menuId=#{menuId}
+	</select>
+	<!-- 删除菜单 -->
+	<delete id="deleteMenus" parameterType="string">
+		delete from  MenuInfo where menuId=#{menuId} 
+	</delete>
+	<!-- 添加菜单 -->
+	<insert id="addMeuns" parameterType="com.sharebo.entity.MenuInfo">
+		insert into MenuInfo values(UUID_SHORT(),#{menuName},#{href},'rightFrame',#{mt.menuTypeId})
+	</insert>
+	<!-- 验证菜单是否已经存在 -->
+	<select id="valMenusIsistsByMenuName" parameterType="string" resultType="int">
+		select count(1) from  menuinfo where menuName=#{menuName}
+	</select>
+	<!-- 查询角色是否存在 -->
+	<select id="valRoleExists" parameterType="string" resultType="int">
+		select count(1) from roleinfo where roleName=#{roleName}
+	</select>
+</mapper>

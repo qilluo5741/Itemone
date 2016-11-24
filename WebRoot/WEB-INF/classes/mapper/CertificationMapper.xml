@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.CertificationMapper">
+	<!-- 分页查询供方消息记录 -->
+	<select id="getCertification" parameterType="hashmap" resultType="com.sharebo.entity.Dto.CertificationDto">
+	SELECT
+		c.certificationId,
+		c.driver_license_positive,
+		c.driver_license_reverse,
+		c.vehicle_license_positive,
+		c.vehicle_license_reverse,
+		c.email,
+		c.audittime,
+		c.thistime,
+		u.userName,
+		u.mobile,
+		c.certification_status
+	FROM
+	 certification c,user u
+	WHERE
+	c.userid=u.userid
+			ORDER BY
+				c.audittime ASC
+			LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<select id="pagerCertificationcount" resultType="int" parameterType="string">
+		SELECT count(1) FROM certification c,user u WHERE c.userid=u.userid
+	</select>
+	<update id="updateCertification" parameterType="com.sharebo.entity.Dto.CertificationDto">
+	    update certification set certification_status=#{certification_status},thistime=#{thistime} where certificationId=#{certificationId}
+	</update>
+</mapper>

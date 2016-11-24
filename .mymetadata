@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="sharebo_v2.0"
+  id="myeclipse.1458626843078"
+  context-root="/sharebo"
+  j2ee-spec="5.0"
+  archive="sharebo_v2.0.war">
+  <attributes>
+    <attribute name="webrootdir" value="WebRoot" />
+  </attributes>
+</project-module>
+

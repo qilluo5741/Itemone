@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.WebManagementMapper">
+	<!-- 模糊查询-->
+	<select id="getManagementisnotPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.ManagementDto">
+	SELECT
+		p.parkNo,u.userName,u.mobile,p.money,p.chargetype,p.is_delete,p.releasedate,p.update_time,c.community_name,p.park_instructions,p.entrance,p.parkid
+	FROM
+		parkingspace p,USER u,community c
+	WHERE
+		p.userid=u.userid and c.communityId=p.communityId
+		and p.releasedate BETWEEN #{date_beegin} and #{date_end} and p.is_delete=#{is_delete} and p.chargetype=#{chargetype} and u.mobile like '%${mobile}%' 
+	ORDER BY
+		p.releasedate DESC
+	LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 模糊查询分页总数 -->
+	<select id="getManagementnotcount" resultType="int" parameterType="string">
+	SELECT
+		count(1)
+	FROM
+		parkingspace p,
+		user u,
+		community c
+	WHERE
+		p.userid = u.userid
+	AND c.communityId = p.communityId
+	AND p.releasedate BETWEEN #{date_beegin} and #{date_end} and p.is_delete=#{is_delete} and p.chargetype=#{chargetype} and u.mobile like concat(concat('%',#{mobile}),'%')
+	</select>
+	<!-- 分页查询车位 -->
+	<select id="getManagementPager" parameterType="hashmap" resultType="com.sharebo.entity.Dto.ManagementDto">
+	SELECT
+		p.parkNo,u.userName,u.mobile,p.money,p.chargetype,p.is_delete,p.releasedate,p.update_time,c.community_name,p.park_instructions,p.entrance,p.parkid
+	FROM
+		parkingspace p,USER u,community c
+	where
+		p.userid=u.userid and c.communityId=p.communityId
+	ORDER BY
+		p.releasedate DESC
+	LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询车位总数 -->
+	<select id="getManagementcount" resultType="int">
+		SELECT
+		count(1)
+	FROM
+		parkingspace p,
+		user u,
+		community c
+	WHERE
+		p.userid = u.userid
+	AND c.communityId = p.communityId
+	</select>
+</mapper>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.ProprietaryParkingMapper">
+	 <cache type="com.sharebo.util.MybatisRedisCache"/>
+	<!-- 查询一个车位当月全部禁用的时间 -->
+	<select id="selectParkMonthAllDayRlus" parameterType="hashmap" resultType="string">
+		select thisDay from dayrules where parkid=#{parkid} and thisDay>=#{begin} and thisDay &lt; #{end}
+			and ( hours_01 is null or hours_01=0 ) and ( hours_02 is null or hours_02=0 ) and ( hours_03 is null or hours_03=0 ) and ( hours_04 is null or hours_04=0 ) and ( hours_05 is null or hours_05=0 ) and ( hours_06 is null or hours_06=0 ) and ( hours_07 is null or hours_07=0 ) and ( hours_08 is null or hours_08=0 ) and ( hours_09 is null or hours_09=0 ) and ( hours_10 is null or hours_10=0 ) and ( hours_11 is null or hours_11=0 ) and ( hours_12 is null or hours_12=0 ) and ( hours_13 is null or hours_13=0 ) and ( hours_14 is null or hours_14=0 ) and ( hours_15 is null or hours_15=0 ) and ( hours_16 is null or hours_16=0 ) and ( hours_17 is null or hours_17=0 ) and ( hours_18 is null or hours_18=0 ) and ( hours_19 is null or hours_19=0 ) and ( hours_20 is null or hours_20=0 ) and ( hours_21 is null or hours_21=0 ) and ( hours_22 is null or hours_22=0 ) and ( hours_23 is null or hours_23=0 ) and ( hours_24 is null or hours_24=0 )
+	</select>
+	<!-- 查询一个车位当月全部独立设置没有禁用的时间 -->
+	<select id="selectparkMenthAllNotDayRlus" parameterType="hashmap" resultType="string">
+		select thisDay from dayrules where 
+ 			parkid=#{parkid} and thisDay>=#{begin} and thisDay &lt; #{end}
+				and   ( hours_01=1 ||  hours_02=1 ||  hours_03=1 ||  hours_04=1 ||  hours_05=1 ||  hours_06=1 ||  hours_07=1 ||  hours_08=1 ||  hours_09=1 ||  hours_10=1 ||  hours_11=1 ||  hours_12=1 ||  hours_13=1 ||  hours_14=1 ||  hours_15=1 ||  hours_16=1 ||  hours_17=1 ||  hours_18=1 ||  hours_19=1 ||  hours_20=1 ||  hours_21=1 ||  hours_22=1 ||  hours_23=1 ||  hours_24=1 )
+		
+	</select>
+	<!-- 修改当天时间 -->
+	<update id="updateDayByHours" parameterType="com.sharebo.entity.Dayrules">
+		update Dayrules set hours_01=#{hours_01},hours_02=#{hours_02},hours_03=#{hours_03},hours_04=#{hours_04},hours_05=#{hours_05},hours_06=#{hours_06},hours_07=#{hours_07},hours_08=#{hours_08},hours_09=#{hours_09},hours_10=#{hours_10},hours_11=#{hours_11},hours_12=#{hours_12},hours_13=#{hours_13},hours_14=#{hours_14},hours_15=#{hours_15},hours_16=#{hours_16},hours_17=#{hours_17},hours_18=#{hours_18},hours_19=#{hours_19},hours_20=#{hours_20},hours_21=#{hours_21},hours_22=#{hours_22},hours_23=#{hours_23},hours_24=#{hours_24}
+			where thisDay=#{thisDay} and parkid=#{parkid}
+	</update>
+	<!-- 添加一个日期规则 -->
+	<insert id="addDayrules" parameterType="com.sharebo.entity.Dayrules">
+		insert into Dayrules values(#{dayid},#{thisDay},#{parkid},#{hours_01} ,#{hours_02} ,#{hours_03} ,#{hours_04} ,#{hours_05} ,#{hours_06} ,#{hours_07} ,#{hours_08} ,#{hours_09} ,#{hours_10} ,#{hours_11} ,#{hours_12} ,#{hours_13} ,#{hours_14} ,#{hours_15} ,#{hours_16} ,#{hours_17} ,#{hours_18} ,#{hours_19} ,#{hours_20} ,#{hours_21} ,#{hours_22} ,#{hours_23} ,#{hours_24})
+	</insert>
+	<!-- 查询日期规则是否存在 -->
+	<select id="isExistxByDayrules" parameterType="com.sharebo.entity.Dayrules" resultType="int">
+		select count(1) from Dayrules where thisday=#{thisDay} and parkid=#{parkid}
+	</select>
+	
+	<!-- 通过车位ID  和时间 查询时间 -->
+	<select id="getOrdertime" resultType="com.sharebo.entity.OrderTime" parameterType="hashmap">
+		select * from ordertime 
+			where 
+				orderid in
+						(select orderid from orderinfo where (order_state=0 or order_state=1 or order_state=3) and parkid=#{parkid}) 
+			and thisDate=#{day}
+	</select>
+	<!-- 根据parkid查询用户的星期规则 -->
+	<select id="weekTime" resultType="com.sharebo.entity.Weekrules" parameterType="string">
+		select * from weekrules where parkid=#{parkid}
+	</select>
+	<!-- 查询一个的可用时间 -->
+	 <select id="getDayrules" parameterType="hashmap" resultType="com.sharebo.entity.Dayrules">
+	 	select * from dayrules where parkid=#{parkid} and thisDay=#{day}
+	 </select>
+	<!-- 查询某天是否非禁用  -->
+	<select id="isDayNotDisable" resultType="int" parameterType="hashmap">
+		select count(1) from dayrules where parkid=#{parkid}  and thisDay=#{today} and   ( hours_01=1 ||  hours_02=1 ||  hours_03=1 ||  hours_04=1 ||  hours_05=1 ||  hours_06=1 ||  hours_07=1 ||  hours_08=1 ||  hours_09=1 ||  hours_10=1 ||  hours_11=1 ||  hours_12=1 ||  hours_13=1 ||  hours_14=1 ||  hours_15=1 ||  hours_16=1 ||  hours_17=1 ||  hours_18=1 ||  hours_19=1 ||  hours_20=1 ||  hours_21=1 ||  hours_22=1 ||  hours_23=1 ||  hours_24=1 )
+	</select>
+	
+	<!--查询某天是否禁用  #0 没有禁用  1 禁用-->
+	<select id="isDayDisable" resultType="int" parameterType="hashmap">
+		 select count(1) from dayrules where parkid=#{parkid} and thisDay=#{thisDay} and ( hours_01 is null or hours_01=0 ) and ( hours_02 is null or hours_02=0 ) and ( hours_03 is null or hours_03=0 ) and ( hours_04 is null or hours_04=0 ) and ( hours_05 is null or hours_05=0 ) and ( hours_06 is null or hours_06=0 ) and ( hours_07 is null or hours_07=0 ) and ( hours_08 is null or hours_08=0 ) and ( hours_09 is null or hours_09=0 ) and ( hours_10 is null or hours_10=0 ) and ( hours_11 is null or hours_11=0 ) and ( hours_12 is null or hours_12=0 ) and ( hours_13 is null or hours_13=0 ) and ( hours_14 is null or hours_14=0 ) and ( hours_15 is null or hours_15=0 ) and ( hours_16 is null or hours_16=0 ) and ( hours_17 is null or hours_17=0 ) and ( hours_18 is null or hours_18=0 ) and ( hours_19 is null or hours_19=0 ) and ( hours_20 is null or hours_20=0 ) and ( hours_21 is null or hours_21=0 ) and ( hours_22 is null or hours_22=0 ) and ( hours_23 is null or hours_23=0 ) and ( hours_24 is null or hours_24=0 ) 
+	</select>
+	
+	<!-- 查询星期是否为禁用 -->
+	<select id="isdisableWeek" parameterType="hashmap" resultType="int">
+		select count(1) from  weekrules  
+			<where>
+				<if test="week==1"><!-- 星期日 -->
+					sunday_begin=sunday_end
+				</if>
+				<if test="week==2"><!-- 星期一 -->
+					monday_begin=monday_end
+				</if>
+				<if test="week==3"><!-- 星期二 -->
+					tuesday_begin=tuesday_end
+				</if>
+				<if test="week==4"><!-- 星期三 -->
+					wednesday_begin=wednesday_end
+				</if>
+				<if test="week==5"><!-- 星期四 -->
+					thursday_begin=thursday_end
+				</if>
+				<if test="week==6"><!-- 星期五 -->
+					friday_begin=friday_end
+				</if>
+				<if test="week==7"><!-- 星期六 -->
+					saturday_begin=saturday_end
+				</if>
+			</where>
+			and parkid=#{parkid}
+	</select>
+	<!-- 修改车位星期规则时间 -->
+	<update id="updateWeekrulesByWeekid" parameterType="com.sharebo.entity.Dto.WeekrulesDto">
+		update Weekrules set
+			monday_begin=#{monday_begin},monday_end=#{monday_end},
+			tuesday_begin=#{tuesday_begin},tuesday_end=#{tuesday_end},
+			wednesday_begin=#{wednesday_begin},wednesday_end=#{wednesday_end},
+			thursday_begin=#{thursday_begin},thursday_end=#{thursday_end},
+			friday_begin=#{friday_begin},friday_end=#{friday_end},
+			saturday_begin=#{saturday_begin},saturday_end=#{saturday_end},
+			sunday_begin=#{sunday_begin},sunday_end=#{sunday_end}
+	 			where weekid=#{weekid}
+	</update>
+	<!-- 根据车位id查询星期规则 -->
+	<select id="getWeekRulesByParkId" parameterType="string" resultType="com.sharebo.entity.Dto.WeekrulesDto">
+		select * from Weekrules where parkid=#{_parkid}
+	</select>
+	<!-- 根据车位id查询车位信息 -->
+	<select id="getParkInfoByParkId"  parameterType="string" resultType="com.sharebo.entity.Dto.ParkCommunityDto">
+		select p.entrance,p.parkType,p.parkid,p.parkNo,p.park_instructions,money,chargetype,c.communityId,community_name,community_address from parkingspace p,community c where c.communityId=p.communityId and p.parkid=#{_parkid}
+	</select>
+	<!-- 根据小区名字模糊查询小区 -->
+	<select id="getCommunitybyLike" parameterType="string" resultType="com.sharebo.entity.Community" >
+		select communityId,community_name,community_address,administrative from Community  where isaudit=1 and community_name like #{_community_name} LIMIT 5
+	</select> 
+
+	<!-- 根据userid查询全部车位 -->
+	<select id="getParkIdByuserid" parameterType="string" resultType="com.sharebo.entity.Dto.ParkDto"> 
+		select p.parkNo,p.parkid,c.community_name,c.community_address from parkingspace p,Community c where p.communityId=c.communityId and p.is_delete=0 and p.userid=#{_userid} 
+	</select>
+	<!-- 修改车位信息 -->
+	<update id="updateParkingspaceByparkId" parameterType="com.sharebo.entity.Parkingspace">
+		update parkingspace set parkNo=#{parkNo},park_instructions=#{park_instructions},update_time=now(),money=#{money},chargetype=#{chargetype},parkType=#{parkType},entrance=#{entrance} where parkid=#{parkid}
+	</update>
+	<!-- 根据车位编号查询 该用户是否已经存在 -->
+	<select id="isparkNoIsExisByUserId" resultType="int" parameterType="com.sharebo.entity.Parkingspace">
+		select count(1) from Parkingspace where userid=#{user.userid} and parkNo=#{parkNo}
+	</select>
+	<!-- 添加车位 -->
+	<insert id="addParkingspace" parameterType="com.sharebo.entity.Parkingspace">
+		insert into parkingspace(parkid,parkNo,park_instructions,releasedate,update_time,parkstate,money,chargetype,userid,communityId,is_delete,parkType,entrance) 
+			VALUES(#{parkid},#{parkNo},#{park_instructions},NOW(),NOW(),0,#{money},#{chargetype},#{user.userid},#{community.communityId},0,#{parkType},#{entrance})
+	</insert>
+	<!-- 添加时间规则 -->
+	<insert id="addWeekdayByParkInfo" parameterType="com.sharebo.entity.Weekrules">
+		INSERT INTO weekrules VALUES(#{weekid},'00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00','00:00',now(),#{park.parkid})
+	</insert>
+	<!-- ######################################################################################### -->
+	<!--验证车位是否存在-->
+	<select id="valParkInfoIsExists" parameterType="string" resultType="int">
+		select count(1) from Parkingspace where is_delete=0 and parkid=#{_parkid}
+	</select>
+	<!-- 验证订单中是否存在未处理的订单（需方已经付款，还未处理） -->
+	<select id="valOrderIsExists" parameterType="string" resultType="int">
+		select count(1) from orderinfo where order_state=1 and  parkid=#{_parkid}
+	</select>
+	<!-- 删除车位（修改车位状态  ）  -->
+	<update id="deletePark" parameterType="string">
+		update parkingspace set is_delete=1 where parkid=#{_parkid}
+	</update>
+	<!-- ######################################################################################### -->
+</mapper>

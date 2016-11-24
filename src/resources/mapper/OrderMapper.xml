@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sharebo.mapper.OrderMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+	<!-- 修改订单状态  为取消-->
+	<update id="updateOrderState" parameterType="string">
+		update orderinfo set order_state=2 where orderid=#{orderid}
+	</update>
+	<!-- 验证车位是否存在 -->
+	<select id="valParkIsExistsByparkid" parameterType="string" resultType="int">
+		select count(1) from Parkingspace where parkid=#{parkid} and is_delete=0
+	</select>
+	<!-- 根据车位id查询收费类型 -->
+	<select id="getchargetypeByParkid" resultType="int" parameterType="string">
+		select chargetype from Parkingspace where parkid=#{parkid}
+	</select>
+	<!-- 根据车位id查询单价 -->
+	<select id="getMoneyByparkid" resultType="double" parameterType="string">
+		select money from Parkingspace where parkid=#{parkid}
+	</select>
+	<!-- 删除订单 -->
+	<delete id="deleteOrder" parameterType="string">
+		delete OrderInfo where orderid=#{_orderid}
+	</delete>
+	<!--添加订单时间 -->
+	<insert id="addOrdertime" parameterType="hashmap">
+		insert into OrderTime values ${ordertimesql}
+	</insert>
+	<insert id="addOrder" parameterType="hashmap">
+		INSERT INTO OrderInfo(orderid,ordernum,parkid,placeorde_time,order_state,vehicleid,from_userid,chargetype,money,typemoney)
+	SELECT
+	 #{order.orderid},#{order.ordernum},#{order.park.parkid},now(),0,
+	 #{order.vehicleid},#{order.from_user.userid} ,#{order.chargeType},
+	 #{order.money},#{order.typemoney} 
+	FROM DUAL
+		WHERE 
+	NOT EXISTS 
+		(
+			SELECT * from ordertime 
+					WHERE thisdate>= left(now(),10) 
+				AND  orderid 
+						in 
+				(
+					SELECT orderid from orderinfo o WHERE o.parkid=#{order.park.parkid} 
+						AND 
+					(order_state=0 or order_state=1 OR order_state=3)
+				)
+					${sql}
+		)
+	</insert>
+	<!-- 验证一组数据是否已经预约 （判断数据库是否存在交集）-->
+	<select id="valOrderTimeIsExistx" parameterType="hashmap" resultType="string">
+		select thisdate from ordertime 
+		where thisdate>= left(now(),10) 
+			and  orderid 
+					in 
+			(select orderid from orderinfo o where o.parkid=#{parkid} and (order_state=0 or order_state=1 or order_state=3))
+		${sql}
+	</select>
+	<!-- 验证小时是否合法 -->
+	<select id="valDay" parameterType="hashmap" resultType="int">
+		select count(1) from dayrules 
+		<where>${sql} </where>
+	</select>
+	<!-- 根据parkid查询用户的星期规则 -->
+	<select id="weekTime" resultType="com.sharebo.entity.Weekrules" parameterType="string">
+		select * from weekrules where parkid=#{parkid}
+	</select>
+	
+	<!-- 订单：验证小时规则是否存在 -->
+	<select id="valHoursIsExists" parameterType="hashmap" resultType="int">
+		select count(1) from dayrules where  parkid=#{parkid} and thisDay=#{thisDay}
+	</select>
+	<!-- 查询星期是否为禁用 -->
+	<select id="isdisableWeek" parameterType="hashmap" resultType="int">
+		select count(1) from  weekrules  
+			<where>
+				<if test="week==1"><!-- 星期日 -->
+					sunday_begin=sunday_end
+				</if>
+				<if test="week==2"><!-- 星期一 -->
+					monday_begin=monday_end
+				</if>
+				<if test="week==3"><!-- 星期二 -->
+					tuesday_begin=tuesday_end
+				</if>
+				<if test="week==4"><!-- 星期三 -->
+					wednesday_begin=wednesday_end
+				</if>
+				<if test="week==5"><!-- 星期四 -->
+					thursday_begin=thursday_end
+				</if>
+				<if test="week==6"><!-- 星期五 -->
+					friday_begin=friday_end
+				</if>
+				<if test="week==7"><!-- 星期六 -->
+					saturday_begin=saturday_end
+				</if>
+			</where>
+			and parkid=#{parkid}
+	</select>
+	<!-- 查询全部未支付的订单 -->
+	<select id="getOrderInfoByDisNotPay" resultType="com.sharebo.entity.Dto.OrderCancelDto">
+		select orderid,placeorde_time from orderinfo where order_state=0
+	</select>
+	<!-- 查询订单详情 -->
+	<select id="getOrderInfo" resultType="com.sharebo.entity.Dto.OrderInfoDto" parameterType="string">
+		select o.orderid,o.ordernum,o.vehicleid,o.money,o.order_state,o.typemoney,o.chargetype,c.community_name,c.community_address,p.parkNo 
+				from orderinfo o,parkingspace p,community c
+		where o.parkid=p.parkid and p.communityid=c.communityid
+				and orderid=#{orderid}
+	</select>
+	<!--查询订单时间 -->
+	<select id="getOrderTimeInfo" parameterType="string" resultType="com.sharebo.entity.Dto.OrderTimeGetOrderDto">
+		select * from ordertime where orderid=#{orderid}
+	</select>
+		
+	<!--需方：根据userid分页查询我的订单（每条订单的信息：小区名字、时间段（多条），订单状态，费用等）  -->
+	<select id="qureyXuOrder" parameterType="hashmap" resultType="com.sharebo.entity.Dto.XuOrder">
+	select o.orderid,
+		o.ordernum,o.order_state,o.money,o.placeorde_time,v.vehicleno,c.community_name
+		from orderinfo o
+		left JOIN vehicle v on o.vehicleid=v.vehicleid
+		LEFT JOIN parkingspace p on
+		o.parkid=p.parkid
+		left join community c on p.communityId=c.communityId
+		where
+		o.from_userid=#{userid}
+		ORDER BY o.placeorde_time LIMIT
+	#{pageBegin},#{pageSize}
+	</select>
+	<!-- 总条数  -->
+	<select id="pagerbyXuCount" resultType="int" parameterType="string">
+		select count(0) from orderinfo where from_userid=#{userid}
+	</select>
+	<resultMap type="com.sharebo.entity.Dto.GongOrder" id="queryGongOrderMap">
+		<id property="orderid" column="orderid"/>
+		<result property="ordernum" column="ordernum"/>
+		<result property="order_state" column="order_state"/>
+		<result property="typemoney" column="typemoney"/>
+		<result property="money" column="money"/>
+		<result property="mobile" column="mobile"/>
+		<result property="placeorde_time" column="placeorde_time"/>
+		<result property="vehicleno" column="vehicleno"/>
+		<collection property="times" ofType="com.sharebo.entity.Dto.Times">
+			<result property="thisDate" column="thisDate"/>
+			<result property="begin_time" column="begin_time"/>
+			<result property="end_time" column="end_time"/>
+		</collection>
+	</resultMap>
+	<!--根据userid分页查询我的车位id,然后通过车位id查询订单表中关于我的订单 去除未付款的订单。  -->
+	<select id="queryGongOrder" parameterType="string" resultMap="queryGongOrderMap">
+	select o.orderid,o.order_state,o.typemoney,o.vehicleid as vehicleno,u.mobile,o.money,o.placeorde_time,o.ordernum,ot.begin_time,ot.thisDate,ot.end_time
+		from ordertime ot left join orderinfo o on o.orderid=ot.orderid LEFT JOIN user u on u.userid=o.from_userid
+	where  (o.order_state=1 or o.order_state=3 or o.order_state=4)
+		and o.parkid in 
+		(select parkid from parkingspace where userid=#{userid})
+	ORDER BY o.placeorde_time desc
+	</select>
+	<select id="pagerbyGongCount" parameterType="string" resultType="int">
+	select count(0) from orderinfo where parkid=#{parkid}
+	</select>
+	<!-- 根据userid查询最近的两个订单信息 -->
+	<select id="queryTwoOrder" parameterType="string" resultType="com.sharebo.entity.Dto.TwoOrder">
+	SELECT  u.userName,u.headportrait, c.community_name,o.orderid
+		FROM orderinfo o,user u,community c, parkingspace p  
+	where o.from_userid=#{userid} and  u.userid=o.from_userid and p.parkid=o.parkid and c.communityId=p.communityId 
+		ORDER BY o.placeorde_time LIMIT 2
+	</select>
+	<!-- 根据订单id 查看订单时间段 -->
+	<select id="queryTimes" parameterType="string" resultType="com.sharebo.entity.Dto.Times">
+		SELECT  t.thisDate,t.begin_time,t.end_time from ordertime t,orderinfo o  
+		where o.orderid=t.orderid and o.orderid=#{orderid}
+	</select>
+	<!-- 根据useridc查看park -->
+	<select id="queryByUserid" parameterType="string" resultType="string">
+		select parkid from parkingspace where userid=#{userid}
+	</select>
+	<select id="queryParkid" parameterType="string" resultType="string" >
+		select parkid from orderinfo where  from_userid =#{userid}
+	</select>
+	<!-- 修改订单状态 -->
+	<update id="updateOrderInfoByordernum" parameterType="com.sharebo.entity.OrderInfo">
+		update OrderInfo set payment_time=#{payment_time},payType=#{payType},order_state=#{order_state},money=#{money} where ordernum=#{ordernum}	
+	</update>
+	<!--查询订单号用户id空 -->
+	<select id="getOrdernumByUserid" parameterType="string" resultType="string">
+		select  from_userid from orderinfo where ordernum=#{ordernum}
+	</select>
+	<!--扣取用户支付的金额-->
+	<update id="updateBybalance" parameterType="com.sharebo.entity.Purse" >
+		update purse set balance=#{balance} where userid=#{user.userid}
+	</update>
+	<!-- 通过订单号码查询订单id -->
+	<select id="getOrderIdByOrderNum" parameterType="string" resultType="string">
+		select orderid from  orderinfo where ordernum=#{ordernum}
+	</select>
+	<!--修改接受拒绝状态-->
+	<update id="updatestateByordernum" parameterType="com.sharebo.entity.OrderInfo" >
+		update OrderInfo set order_state=#{order_state} where orderid=#{orderid}
+	</update>
+	<!--查询订单id查询需要退款的的金额和查询用户id-->
+	<select id="getorderidByorder" parameterType="string" resultType="com.sharebo.entity.Dto.OrderDto">
+		select  from_userid,money from orderinfo where orderid=#{orderid}
+	</select>
+	<!--扣取用户支付的金额-->
+	<update id="updateBybalances" parameterType="com.sharebo.entity.Purse" >
+		update purse set balance=#{balance} where userid=#{user.userid}
+	</update>
+	<!-- 查询车牌 -->
+	<select id="getvehicleidByOrderNum" parameterType="string" resultType="string">
+		select vehicleid from orderinfo where ordernum=#{ordernum}
+	</select>
+	<!-- 根据订单号查询手机号码 -->
+	<select id="getmobileByOrderNum" parameterType="string" resultType="string">
+		select mobile from user where userid =(SELECT from_userid FROM orderinfo where ordernum=#{ordernum})
+	</select>
+	<!-- 根据订单id查询手机号码 -->
+	<select id="getmobileByOrderid" parameterType="string" resultType="string">
+		select mobile from user where userid=(SELECT from_userid FROM orderinfo where orderid=#{ordernum})
+	</select>
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="  http://www.springframework.org/schema/tx   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+        http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+	<!-- 使用注解获取值 -->
+	<bean id="configProperties"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+			<list>
+				<value>classpath:config.properties</value>
+			</list>
+		</property>
+	</bean>
+	<!--
+	     注入 
+	    -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+		<property name="properties" ref="configProperties" />
+	</bean><!--
+	    
+	     配置时间调度 
+	  定义jobDetail 
+ 	-->
+	<bean id="jobDetail"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean"><!--
+	 	   目标类 　
+	     -->
+		<property name="jobClass" value="${jobClass}"></property>
+	</bean><!-- 
+      时间调度触发器是CornTrigger 
+ 	-->
+	<bean id="cornTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="jobDetail" />
+		<!--
+			毫秒 秒 分 小时 日期。。。。
+		-->
+		<property name="cronExpression" value="${cronExpressionValues}" />
+	</bean><!-- 
+	  定义核心调度器 
+	-->
+	<bean id="scheduler"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<ref bean="cornTrigger" />
+		</property>
+	</bean>
+
+</beans>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper中定义的是mybatis对某些业务的sql语句 -->
+<mapper namespace="com.sharebo.mapper.PurseMapper">
+<cache type="com.sharebo.util.MybatisRedisCache"/>
+<!-- 映射钱包表和用户表 -->
+	<resultMap type="com.sharebo.entity.Purse" id="PurseResMap">
+			<id  column="purseid" property="purseid"/>
+			<result column="balance" property="balance"/>
+			<result column="blocked_balances" property="blocked_balances"/>
+	</resultMap>
+	<!-- 根据用户编号查询余额和冻结余额 -->
+	<select id="getPurseByUserid" parameterType="string" resultMap="PurseResMap">
+		select *  from purse where userid=#{userid}
+	</select>
+	 <!-- 分页查询集合提现记录 -->
+	<select id="pagertbyList" parameterType="hashmap" resultType="com.sharebo.entity.WithdrawalRecord">
+		select * from WithdrawalRecord   where userid=#{userid} order by withdrawal_date desc LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询提现记录总条数 -->
+	<select id="pagerbyCount" resultType="int" parameterType="string">
+		select count(1) from WithdrawalRecord where userid=#{userid}
+	</select>
+	 <!-- 分页查询集合交易记录 -->
+	<select id="pagerTouchBalance" parameterType="hashmap" resultType="com.sharebo.entity.TouchBalance">
+		select * from touchbalance   where purseid=#{purseid} order by operation_time desc  LIMIT #{pageBegin},#{pageSize}
+	</select>
+	<!-- 查询交易记录总条数 -->
+	<select id="pagerCountTouchBalance" resultType="int" parameterType="string">
+		select count(1) from touchbalance where purseid=#{purseid}
+	</select>
+	<!--更新钱包的金额 -->
+	<update id="updatePurse" parameterType="hashmap">
+		update purse set balance=balance-#{balance} where userid=#{userid}
+	</update>
+	<!--添加提现记录 -->
+	<insert id="createWR" parameterType="com.sharebo.entity.WithdrawalRecord">
+	 insert into withdrawalrecord
+	 values(UUID_SHORT(),#{withdrawal_money},NOW(),#{user.userid},0,null,0,(select payName from user where userid=#{user.userid}),(select payNo from user where userid=#{user.userid}))
+	</insert>
+	<!--添加交易记录 -->
+	<insert id="createTB" parameterType="com.sharebo.entity.TouchBalance">
+	insert into InvitedRecord 
+	 values(UUID_SHORT(),#{money},#{operation_time},#{tradtype},#{purse.purseid})
+	</insert>
+	<!--根据订单号查询需要支付的金额-->
+	<select id="getOrdernumBymoney" parameterType="string" resultType="double">
+		select money from orderinfo where ordernum=#{ordernum}
+	</select>
+	<!--根据用户id查询金额-->
+	<select id="getPurseBybalance" parameterType="string" resultType="double">
+		select balance from Purse where userid=#{user.userid}
+	</select>
+	<!--查询是否该订单已经支付，防止重复扣取费用-->
+	<select id="getorder_state" parameterType="string" resultType="int">
+		select count(1) from orderinfo where ordernum=#{ordernum} and order_state=0;
+	</select>
+	<!--扣取用户支付的金额-->
+	<update id="updateBybalance" parameterType="com.sharebo.entity.Purse" >
+		update purse set balance=#{balance} where userid=#{user.userid} and #{balance} &lt;=balance
+	</update>
+</mapper>
